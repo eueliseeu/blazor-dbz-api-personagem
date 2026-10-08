@@ -1,0 +1,147 @@
+﻿@page "/"
+@inject HttpClient Http
+@using BlazorDbzPersonagem.Models
+
+<PageTitle>Dragon Ball Personagens</PageTitle>
+
+<div class="container py-5" style="max-width: 960px;">
+
+  <div class="input-group input-group-lg mb-4 shadow-sm">
+    <select class="form-select"
+            aria-label="Selecione o personagem"
+            @bind="personagemId"
+            @bind:after="BuscarPersonagemAsync"
+            disabled="@(carregando || !listaPersonagens.Any())">
+      @foreach (var item in listaPersonagens)
+      {
+        <option value="@item.Id">@item.Id - @item.Name</option>
+      }
+    </select>
+  </div>
+
+  @if (!string.IsNullOrWhiteSpace(mensagemErro))
+  {
+    <div class="alert alert-danger d-flex align-items-center" role="alert">
+      <div>@mensagemErro</div>
+    </div>
+  }
+
+  @if (personagem is not null)
+  {
+    <div class="card border-0 shadow overflow-hidden">
+      <div class="row g-0">
+
+        <div class="col-md-5 order-md-2 bg-light d-flex align-items-center justify-content-center p-4">
+          @if (!string.IsNullOrWhiteSpace(personagem.Image))
+          {
+            <img src="@personagem.Image"
+                 alt="Imagem do personagem @personagem.Name"
+                 class="img-fluid"
+                 style="max-height: 480px; object-fit: contain;" />
+          }
+        </div>
+
+        <div class="col-md-7 order-md-1">
+          <div class="card-body p-4 p-lg-5">
+            <p class="text-uppercase text-muted small fw-semibold mb-1">Informações do Personagem</p>
+            <h1 class="display-5 fw-bold mb-4">@personagem.Name</h1>
+
+            <div class="mb-4">
+              <div class="text-muted small">Planeta de origem</div>
+              <div class="fs-5 fw-semibold">@GetPlaneta(personagem)</div>
+            </div>
+
+            <div>
+              <div class="text-muted small mb-2">Transformações</div>
+
+              @if (personagem.Transformations.Any())
+              {
+                <div class="d-flex flex-wrap gap-2">
+                  @foreach (var transformacao in personagem.Transformations)
+                  {
+                    <span class="badge rounded-pill text-bg-warning fs-6 fw-medium px-3 py-2">
+                      @transformacao.Name
+                    </span>
+                  }
+                </div>
+              }
+              else
+              {
+                <p class="text-muted mb-0">Nenhuma transformação registrada.</p>
+              }
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>
+
+@code {
+  private int personagemId = 1;
+  private bool carregando;
+  private string mensagemErro = string.Empty;
+  private PersonagemDbz? personagem;
+  private List<PersonagemResumo> listaPersonagens = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    await CarregarListaAsync();
+    await BuscarPersonagemAsync();
+  }
+
+  private async Task CarregarListaAsync()
+  {
+    try
+    {
+      var resposta = await Http.GetFromJsonAsync<ListaPersonagensResposta>(
+          "https://dragonball-api.com/api/characters?limit=100");
+
+      listaPersonagens = resposta?.Items ?? new();
+    }
+    catch (Exception)
+    {
+      mensagemErro = "Não foi possível carregar a lista de personagens.";
+    }
+  }
+
+  private async Task BuscarPersonagemAsync()
+  {
+    if (personagemId <= 0)
+    {
+      mensagemErro = "Selecione um personagem válido.";
+      return;
+    }
+
+    carregando = true;
+    mensagemErro = string.Empty;
+
+    try
+    {
+      personagem = await Http.GetFromJsonAsync<PersonagemDbz>(
+          $"https://dragonball-api.com/api/characters/{personagemId}");
+
+      if (personagem is null)
+      {
+        mensagemErro = "Personagem não encontrado.";
+      }
+    }
+    catch (Exception)
+    {
+      mensagemErro = "Não foi possível consultar a API do Dragon Ball.";
+      personagem = null;
+    }
+    finally
+    {
+      carregando = false;
+    }
+  }
+
+  private static string GetPlaneta(PersonagemDbz personagem)
+  {
+    return string.IsNullOrWhiteSpace(personagem.OriginPlanet?.Name)
+        ? "Não informado"
+        : personagem.OriginPlanet.Name;
+  }
+}
