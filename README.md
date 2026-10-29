@@ -16,7 +16,7 @@ Aplicação Blazor WebAssembly para consultar personagens do Dragon Ball usando 
 2. Execute o comando:
 
 ```bash
-dotnet run
+dotnet watch
 ```
 
 3. Acesse a aplicação no navegador em:
