@@ -29,7 +29,7 @@ ou em outra porta indicada pelo terminal.
 
 ## Tecnologias
 
-- .NET 9.0
+- .NET 10.0
 - Blazor WebAssembly
 - C#
 
