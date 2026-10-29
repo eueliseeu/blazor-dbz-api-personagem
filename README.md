@@ -36,7 +36,3 @@ ou em outra porta indicada pelo terminal.
 ## API utilizada
 
 - https://dragonball-api.com/api/characters/{id}
-
-## Autor
-
-- Eliseu Pereira da Silva RA: 12422047
